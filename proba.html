@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестови општег информисања</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #main-container, #quiz-container {
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result, #answer-summary {
+            margin-top: 20px;
+        }
+        .question {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: box-shadow 0.3s ease;
+        }
+        .question:hover {
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .options label {
+            display: block;
+            margin: 5px 0;
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .options label:hover {
+            background-color: #f0f0f0;
+        }
+        .correct {
+            color: green;
+        }
+        .incorrect {
+            color: red;
+        }
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .question.correct {
+            border-color: green;
+            background-color: #e6ffe6;
+        }
+        .question.incorrect {
+            border-color: red;
+            background-color: #ffe6e6;
+        }
+        #clock {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5em;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #timer {
+            font-size: 1.2em;
+            margin-top: 10px;
+            background-color: #007bff; /* Blue background */
+            color: #fff; /* White text */
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="clock"></div>
+    <div id="main-container">
+        <h1>Тестови општег информисања</h1>
+        <button onclick="showTest(1)">Тест 1</button>
+        <button onclick="showTest(2)">Тест 2</button>
+        <button onclick="showTest(3)">Тест 3</button>
+        <button onclick="showTest(4)">Тест 4</button>
+        <button onclick="showTest(5)">Тест 5</button>
+    </div>
+    <div id="quiz-container" style="display: none;">
+        <h1 id="quiz-title"></h1>
+        <div id="timer"></div> <!-- Move the timer div here -->
+        <div id="quiz"></div>
+        <button id="submit-btn" onclick="submitQuiz()">Провери одговоре</button>
+        <button onclick="startQuiz()">Понови тест</button>
+        <button onclick="showHome()">Назад на почетну</button>
+        <div id="result"></div>
+        <div id="answer-summary"></div>
+    </div>
+    <script>
+        const questions1 = [
+            { question: "Који је главни град Либије?", correctAnswer: "Триполи", options: ["Гадамес", "Триполи", "Најроби", "Брега"] },
+            { question: "У којем граду се налази Златни мост?", correctAnswer: "Сан Франциско", options: ["Хјустон", "Вашингтон", "Њујорк", "Сан Франциско"] },
+            { question: "Кад су одржане прве модерне Олимпијске игре?", correctAnswer: "1896. године", options: ["1592. године", "625. године прије нове ере", "1896. године", "33. године (година Христове смрти)"] },
+            { question: "У којој држави је рођен Адолф Хитлер?", correctAnswer: "Аустрија", options: ["Пољска", "Немачка", "Аустрија", "Италија"] },
+            { question: "01. 09. 1939. године почео је Други свјетски рат, и то када је Њемачка напала:", correctAnswer: "Пољску", options: ["Совјетски Савез", "Пољску", "Енглеску", "Француску"] },
+            { question: "Посејдон је бог:", correctAnswer: "мора", options: ["вина и винове лозе", "подземља", "љубави", "мора"] },
+            { question: "Коалиција је:", correctAnswer: "савез", options: ["згрушавање", "суживот", "савез", "сарадња"] },
+            { question: "Научна дисциплина која се бави систематским проучавањем психичког живота људи и животиња назива се:", correctAnswer: "психологија", options: ["��сихологија", "психијатрија", "педагогија", "педијатрија"] },
+            { question: "Пораст општег нивоа цена се назива:", correctAnswer: "инфлација", options: ["дефлација", "девалвација", "инфлација", "профит"] },
+            { question: "Оригами је:", correctAnswer: "вјештина савијања папира", options: ["зачин у кухињи", "врста јапанске борилачке вјештине", "врста јапанске пјесме", "вјештина савијања папира"] },
+            { question: "Оригано је:", correctAnswer: "зачин у кухињи", options: ["зачин у кухињи", "врста јапанске пјесме", "врста јапанске борилачке вјештине", "вјештина савијања папира"] },
+            { question: "Подаци које болесник даје љекару о ранијем стању свог здравља стручно се називају:", correctAnswer: "анамнеза", options: ["амнестија", "анамнеза", "абдикција", "анаморфоза"] },
+            { question: "Наука о грбовима је:", correctAnswer: "хералдика", options: ["нумизматика", "филологија", "хералдика", "генеалогија"] },
+            { question: "Педагошка дисциплина која се бави процесом наставе је:", correctAnswer: "дидактика", options: ["нумизматика", "филологија", "хералдика", "дидактика"] },
+            { question: "Пулицерова награда се додјељује:", correctAnswer: "новинарима", options: ["глумцима", "новинарима", "музичарима", "политичарима"] },
+            { question: "Херкул Поаро је креација:", correctAnswer: "Агате Кристи", options: ["Шерлока Холмса", "Агате Кристи", "Емили Бронте", "Жил Верна"] },
+            { question: "Град свјетлости је назив за:", correctAnswer: "Париз", options: ["Париз", "Рим", "Лондон", "Минхен"] },
+            { question: "1300. година припада:", correctAnswer: "14. вијеку", options: ["12. вијеку", "13. вијеку", "14. вијеку", "15. вијеку"] },
+            { question: "Главни град Швајцарске је:", correctAnswer: "Берн", options: ["Женева", "Цирих", "Берн", "Базел"] },
+            { question: "Главни град Аустралије је:", correctAnswer: "Канбера", options: ["Мелбурн", "Канбера", "Бризбејн", "Сиднеј"] },
+            { question: "Скити су:", correctAnswer: "стари народи", options: ["стари народи", "нелогичне претпоставке", "дио одјеће", "врста птице"] },
+            { question: "Атмосфера, хидросфера и биосфера су:", correctAnswer: "спољашње земљине сфере", options: ["области у Сахари", "гране медицине", "области у прашумама", "спољашње земљине сфере"] },
+            { question: "Џон Толкин је аутор дјела:", correctAnswer: "Господар прстенова", options: ["Хари Потер", "Оркански висови", "Господар прстенова", "Коцкар"] },
+            { question: "Симбол бесмртности је птица:", correctAnswer: "феникс", options: ["орао", "сова", "археоптерикс", "феникс"] },
+            { question: "Византијско царство је други назив за:", correctAnswer: "Источно римско царство", options: ["Персијско царство", "Источно римско царство", "Египатско царство", "Монголско царство"] },
+            { question: "Јаворов лист је симбол:", correctAnswer: "Канаде", options: ["Канаде", "Холандије", "Швајцарске", "Шведске"] },
+            { question: "Које од наведених дјела није написао Толстој:", correctAnswer: "Идиот", options: ["Козаци", "Ана Карењина", "Рат и мир", "Идиот"] },
+            { question: "Које од наведених дјела је написао Данте Алигијери:", correctAnswer: "Божанствена комедија", options: ["Козаци", "Ана Карењина", "Божанствена комедија", "Рат и мир"] },
+            { question: "Цариград је стари назив за:", correctAnswer: "Истанбул", options: ["Истанбул", "Београд", "Беч", "Атину"] },
+            { question: "Букефал је био коњ:", correctAnswer: "Александра Македонског", options: ["Цезара", "Марка Антонија", "Атиле", "Александра Македонског"] },
+        ];
+            
+            // ...additional questions...
+    
+    const questions2 = [
+        { question: "Цар Душан је запамћен и као:", correctAnswer: "Душан Силни", options: ["Душан Силни", "Душан Мудри", "Душан Храбри", "Душан Нејаки"] },
+        { question: "На простору које данашње државе се налазио логор Аушвиц?", correctAnswer: "Пољске", options: ["Италија", "Аустрија", "Чешка", "Пољска"] },
+        { question: "Ко је бог Сунца у египатској митологији?", correctAnswer: "Ра", options: ["Озирис", "Ра", "Феникс", "Кек"] },
+        { question: "Акрофобија је страх од:", correctAnswer: "висине", options: ["летења", "висине", "мишљења", "улица и раскрсница"] },
+        { question: "Готика је:", correctAnswer: "правац у умјетности", options: ["врста дувачког музичког инструмента", "врста лименог музичког инструмента", "геометријски облик", "правац у умјетности"] },
+        { question: "Гроф Вронски је лик из дјела:", correctAnswer: "Ана Карењина", options: ["Рат и мир", "Ана Карењина", "Ловчеви записи", "Браћа Карамазови"] },
+        { question: "Познавалац вина је:", correctAnswer: "енолог", options: ["етнолог", "хедониста", "орнитолог", "енолог"] },
+        { question: "Кад је неко дементан, то значи да је:", correctAnswer: "забораван", options: ["успјешан", "љут", "забораван", "нерасположен"] },
+        { question: "Изучавањем принципа и правила исхране се баве:", correctAnswer: "нутриционисти", options: ["неуролози", "нутриционисти", "нефролози", "нумизматичари"] },
+        { question: "Научна тврдња која се доказује је:", correctAnswer: "хипотеза", options: ["хипотеза", "аксиом", "аксила", "хипоталамус"] },
+        { question: "Вјештина или 'наука' гдје се на основу анализе рукописа откривају особине личности је:", correctAnswer: "графологија", options: ["етнографија", "графологија", "калиграфија", "гастроскопија"] },
+        { question: "Једна миља има дужину од:", correctAnswer: "између 1500 и 2000 метара", options: ["око 500 метара", "2500 метара", "700 метара", "између 1500 и 2000 метара"] },
+        { question: "Ко је изговорио 'Veni, vidi, vici'?", correctAnswer: "Јулије Цезар", options: ["Калигула", "Марко Антоније", "Александар Македонски", "Јулије Цезар"] },
+        { question: "Консензус значи:", correctAnswer: "једногласна одлука", options: ["једногласна одлука", "расправљање", "приједлог"] },
+        { question: "Парламент је исто што и:", correctAnswer: "скупштина", options: ["премијеров кабинет", "коалиција", "скупштина", "влада"] },
+        { question: "Право владара, државе или члана неког законодавног тијела да спријечи изгласавање или доношење неке одлуке назива се:", correctAnswer: "вето", options: ["вето", "приговор", "жалба", "наредба"] },
+        { question: "Организација која се бави међународном полицијском сарадњом је:", correctAnswer: "INTERPOL", options: ["FBI", "CIA", "BIA", "INTERPOL"] },
+        { question: "Масони или:", correctAnswer: "слободни зидари", options: ["слободни трговци", "слободни грађани", "слободни зидари", "слободни молери"] },
+        { question: "Која од наведених земаља припада Скандинавији?", correctAnswer: "Норвешка", options: ["Норвешка", "Холандија", "Литванија", "Латвија"] },
+        { question: "„Gaudeamus igitur“ је химна:", correctAnswer: "студената", options: ["рудара", "медицинара", "вртића", "студената"] },
+        { question: "Ко је, по легенди, основао Рим?", correctAnswer: "Ромул и Рем", options: ["Сенека", "Цезар", "Клеопатра", "Ромул и Рем"] },
+        { question: "Октобарфест је фестивал који се одржава у:", correctAnswer: "Минхену", options: ["Риму", "Минхену", "Прагу", "Будимпешти"] },
+        { question: "Садашњи врховни поглавар римокатоличке цркве је:", correctAnswer: "папа Фрањо I", options: ["папа Бенедикт XVI", "папа Јован Павле II", "папа Фрањо I", "папа Јован Павле I"] },
+    ];
+
+        const questions3 = [
+            // ...additional questions...
+        ];
+
+        const questions4 = [
+            { question: "Како се звао римски врховни бог?", correctAnswer: "Јупитер", options: ["Зевс", "Марс", "Уран", "Јупитер"] },
+            { question: "Како се звао грчки врховни бог?", correctAnswer: "Зевс", options: ["Зевс", "Марс", "Крон", "Јупитер"] },
+            { question: "Аутор дјела „Лолита“ је:", correctAnswer: "Владимир Набоков", options: ["Џорџ Орвел", "Вирџинија Вулф", "Емили Бронте", "Владимир Набоков"] },
+            { question: "Владавина већине је:", correctAnswer: "демократија", options: ["монархија", "олигархија", "демократија", "анархија"] },
+            { question: "Хамлет је био краљевић из:", correctAnswer: "Данске", options: ["Шкотске", "Данске", "Енглеске", "Белгије"] },
+            // ...additional questions...
+        ];
+
+        const questions5 = [
+            { question: "Теорију релативитета је открио:", correctAnswer: "Алберт Анштајн", options: ["Исак Њутн", "Никола Тесла", "Алберт Анштајн", "Томас Јанг"] },
+            { question: "V.I.P. је скраћеница за:", correctAnswer: "веома важну особу", options: ["веома важну особу", "види и продужи", "врати или плати", "веома опасну особу"] },
+            { question: "Аутор слике „Ноћна стража“ је:", correctAnswer: "Рембрант", options: ["Ван Гог", "Реноар", "Рембрант", "Микеланђело"] },
+            { question: "Аутор слике „Герника“ је:", correctAnswer: "Пабло Пикасо", options: ["Ван Гог", "Пабло Пикасо", "Рембрант", "Микеланђело"] },
+            { question: "„Г8“ је ознака за:", correctAnswer: "скуп осам најразвијенијих земаља света", options: ["осам масонских ложа", "осам основних спортских дисциплина", "скуп осам најразвијенијих земаља свијета", "осам геометријских тијела"] },
+            // ...additional questions...
+        ];
+
+        let currentQuestions = [];
+        let quizCompleted = false;
+        let timerInterval;
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function showTest(testNumber) {
+            document.getElementById('main-container').style.display = 'none';
+            document.getElementById('quiz-container').style.display = 'block';
+            document.getElementById('quiz-title').textContent = `Тест ${testNumber}`;
+            switch (testNumber) {
+                case 1:
+                    currentQuestions = questions1;
+                    break;
+                case 2:
+                    currentQuestions = questions2;
+                    break;
+                case 3:
+                    currentQuestions = questions3;
+                    break;
+                case 4:
+                    currentQuestions = questions4;
+                    break;
+                case 5:
+                    currentQuestions = questions5;
+                    break;
+            }
+            startQuiz();
+        }
+
+        function startQuiz() {
+            quizCompleted = false;
+            renderQuiz();
+            document.getElementById('submit-btn').style.display = 'block';
+            document.getElementById('submit-btn').disabled = false; // Reset the submit button state
+            document.getElementById('result').textContent = '';
+            document.getElementById('answer-summary').innerHTML = '';
+            startTimer(20 * 60); // Start the timer with 20 minutes
+        }
+
+        function startTimer(duration) {
+            let timer = duration, minutes, seconds;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+
+                if (--timer < 0) {
+                    clearInterval(timerInterval);
+                    submitQuiz(); // Automatically submit the quiz when time runs out
+                }
+            }, 1000);
+        }
+
+        function renderQuiz() {
+            const quizContainer = document.getElementById('quiz');
+            quizContainer.innerHTML = '';
+            currentQuestions.forEach((q, index) => {
+                const questionElement = document.createElement('div');
+                questionElement.className = 'question';
+                questionElement.innerHTML = `<p>${index + 1}. ${q.question}</p>`;
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'options';
+                
+                // Mešanje опција
+                const shuffledOptions = shuffleArray([...q.options]);
+                
+                shuffledOptions.forEach(option => {
+                    const optionElement = document.createElement('label');
+                    optionElement.innerHTML = `
+                        <input type="radio" name="question${index}" value="${option}" ${quizCompleted ? 'disabled' : ''}>
+                        ${option}
+                    `;
+                    optionsContainer.appendChild(optionElement);
+                });
+                questionElement.appendChild(optionsContainer);
+                quizContainer.appendChild(questionElement);
+            });
+        }
+
+        function submitQuiz() {
+            if (quizCompleted) return;
+            
+            quizCompleted = true;
+            document.getElementById('submit-btn').disabled = true;
+            clearInterval(timerInterval); // Stop the timer
+            let score = 0;
+            let answerSummary = '';
+            currentQuestions.forEach((q, index) => {
+                const questionElement = document.querySelector(`div.question:nth-child(${index + 1})`);
+                const selectedOption = document.querySelector(`input[name="question${index}"]:checked`);
+                const userAnswer = selectedOption ? selectedOption.value : 'Није одговорено';
+                
+                answerSummary += `<div class="question ${selectedOption && selectedOption.value === q.correctAnswer ? 'correct' : 'incorrect'}">`;
+                answerSummary += `<p class="question-text">Питање ${index + 1}: ${q.question}</p>`;
+                
+                if (selectedOption && selectedOption.value === q.correctAnswer) {
+                    score++;
+                    questionElement.style.color = 'green';
+                    answerSummary += `<p>Тачно</p>`;
+                } else {
+                    questionElement.style.color = 'red';
+                    answerSummary += `<p>Нетачно</p>`;
+                }
+                
+                answerSummary += `<p>Ваш одговор: ${userAnswer}</p>`;
+                answerSummary += `<p>Тачан одговор: ${q.correctAnswer}</p>`;
+                answerSummary += `</div>`;
+            });
+
+            const now = new Date();
+            const dateString = now.toLocaleString('sr-RS');
+            
+            document.getElementById('result').innerHTML = `Резултат: ${score} од ${currentQuestions.length}<br>Датум и време завршетка: ${dateString}`;
+            document.getElementById('answer-summary').innerHTML = answerSummary;
+
+            // Disable all radio buttons
+            document.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
+        }
+
+        function showHome() {
+            document.getElementById('main-container').style.display = 'block';
+            document.getElementById('quiz-container').style.display = 'none';
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock(); // Initial call to display clock immediately
+    </script>
+</body>
+</html>
